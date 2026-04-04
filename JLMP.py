@@ -214,10 +214,10 @@ class JLMP:
         except ET.ParseError:
             library_root = ET.Element("database")
             library_tree = ET.ElementTree(library_root)
-        results = ""
+        results = []
         for book in library_root:
             if query.lower() in book.find("title").text.lower():
-                results += f"{book.get('barcode')}: {book.find('title').text} by {book.find('author').text} ({book.find('year').text})\n"
+                results.append(f"{book.get('barcode')}: {book.find('title').text} by {book.find('author').text} ({book.find('year').text})")
         return results
 
 if __name__ == "__main__":
