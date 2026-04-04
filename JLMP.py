@@ -233,7 +233,7 @@ class JLMP:
         book_element = library_root.find(f"book[@barcode='{barcode}']")
         if book_element is None:
             raise ValueError
-        return f"{barcode.get('barcode')}: {barcode.find('title').text} | {barcode.find('genre').text} | {barcode.find('author').text} | {barcode.find('year').text}) | Fiction: {barcode.find('fiction').text}"
+        return f"{barcode}: {book_element.find('title').text} | {book_element.find('genre').text} | {book_element.find('author').text} | {book_element.find('year').text} | Fiction: {book_element.find('fiction').text}"
 
 if __name__ == "__main__":
     print("This is not a frontend, it will not do anything when run on its own.\n" \
