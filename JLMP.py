@@ -6,7 +6,7 @@ import datetime
 
 homedir = os.path.expanduser("~/.local/share/wls/")
 debug = False
-#debug = True           # Uncomment this line to enable debug mode, which uses a local directory instead of the user's home directory.
+debug = True           # Uncomment this line to enable debug mode, which uses a local directory instead of the user's home directory.
 if debug:
     homedir = "./debug/"
 
@@ -203,6 +203,21 @@ class JLMP:
         loan_element.find("due_date").text = new_due_date.isoformat()
         loan_element.find("renewals").text = str(int(loan_element.find("renewals").text) + 1)
         loans_tree.write(loans_path)
+
+    def title_search(query:str):
+        if not os.path.exists(f"{homedir}settings.xml"):
+            raise FileNotFoundError.add_note("Please initialize the library first.")
+        library_path = f"{homedir}database/library.xml"
+        try:
+            library_tree = ET.parse(library_path)
+            library_root = library_tree.getroot()
+        except ET.ParseError:
+            raise ValueError.add_note("No books logged")
+        results = ""
+        for book in library_root:
+            if query.lower() in book.find("title").text.lower():
+                results += f"{book.tag}: {book.find('title').text} by {book.find('author').text} ({book.find('year').text})\n"
+        return results
 
 if __name__ == "__main__":
     print("This is not a frontend, it will not do anything when run on its own.\n" \
