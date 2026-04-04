@@ -212,7 +212,8 @@ class JLMP:
             library_tree = ET.parse(library_path)
             library_root = library_tree.getroot()
         except ET.ParseError:
-            raise ValueError
+            library_root = ET.Element("database")
+            library_tree = ET.ElementTree(library_root)
         results = ""
         for book in library_root:
             if query.lower() in book.find("title").text.lower():
