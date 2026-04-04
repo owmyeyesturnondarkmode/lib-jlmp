@@ -2,41 +2,54 @@
 
 import os
 import xml.etree.ElementTree as ET
+import datetime
 
 homedir = os.path.expanduser("~/.local/share/wls/")
-debug = True
+debug = False
+#debug = True           # Uncomment this line to enable debug mode, which uses a local directory instead of the user's home directory.
 if debug:
     homedir = "./debug/"
 
 class JLMP:
-    def init(barcode_length:str):
+    def init(barcode_length:str,loan_period:str):
         try:
             os.makedirs(homedir, exist_ok=False)
         except OSError:
-            return FileExistsError.add_note("Already initialized.")
+            raise FileExistsError.add_note("Already initialized.")
         if barcode_length.isdigit():
             barcode_length = int(barcode_length)
-            if 3 <= barcode_length <= 10:
+            if 3 <= barcode_length:
                 os.system(f"touch {homedir}settings.xml")
                 with open(f"{homedir}settings.xml", "w") as f:
                     f.write(f"<settings><barcode_length>{barcode_length}</barcode_length></settings>")
             else:
-                os.system(f"touch {homedir}settings.xml")
-                with open(f"{homedir}settings.xml", "w") as f:
-                    f.write("<settings><barcode_length>6</barcode_length></settings>")
+                raise ValueError
         else:
-            os.system(f"touch {homedir}settings.xml")
-            with open(f"{homedir}settings.xml", "w") as f:
-                f.write("<settings><barcode_length>6</barcode_length></settings>")
+            raise ValueError
+
+        if loan_period.isdigit():
+            loan_period = int(loan_period)
+            if loan_period > 1:
+                with open(f"{homedir}settings.xml", "r") as f:
+                    settings_tree = ET.parse(f)
+                    settings_root = settings_tree.getroot()
+                ET.SubElement(settings_root, "loan_period").text = str(loan_period)
+                settings_tree.write(f"{homedir}settings.xml")
+            else:
+                raise ValueError
         os.makedirs(f"{homedir}database/", exist_ok=True)
         with open(f"{homedir}database/library.xml", "w") as f:
             f.write("<database></database>")
         with open(f"{homedir}database/barcodes", "w") as f:
             f.write("")
+        with open(f"{homedir}database/loans.xml", "w") as f:
+            f.write("<database></database>")
+        with open(f"{homedir}database/patrons.xml", "w") as f:
+            f.write("<database></database>")
 
     def add_book(title:str, author:str, year:str, isbn:str):
         if not os.path.exists(f"{homedir}settings.xml"):
-            return FileNotFoundError.add_note("Please initialize the library first.")
+            raise FileNotFoundError.add_note("Please initialize the library first.")
         settings_tree = ET.parse(f"{homedir}settings.xml")
         settings_root = settings_tree.getroot()
         barcode_length = int(settings_root.find("barcode_length").text)
@@ -57,10 +70,144 @@ class JLMP:
         except ET.ParseError:
             library_root = ET.Element("database")
             library_tree = ET.ElementTree(library_root)
-
         book_element = ET.SubElement(library_root, barcode)
         ET.SubElement(book_element, "title").text = title
         ET.SubElement(book_element, "author").text = author
         ET.SubElement(book_element, "year").text = year
         ET.SubElement(book_element, "isbn").text = isbn
         library_tree.write(library_path)
+
+    def rem_book(barcode:str):
+        if not os.path.exists(f"{homedir}settings.xml"):
+            raise FileNotFoundError.add_note("Please initialize the library first.")
+        library_path = f"{homedir}database/library.xml"
+        try:
+            library_tree = ET.parse(library_path)
+            library_root = library_tree.getroot()
+        except ET.ParseError:
+            raise ValueError.add_note("No books logged")
+        book_element = library_root.find(barcode)
+        if book_element is None:
+            raise ValueError.add_note("Invalid barcode.")
+        library_root.remove(book_element)
+        library_tree.write(library_path)
+
+    def loan_book(barcode:str, patron:str):
+        if not os.path.exists(f"{homedir}settings.xml"):
+            raise FileNotFoundError.add_note("Please initialize the library first.")
+        library_path = f"{homedir}database/library.xml"
+        try:
+            library_tree = ET.parse(library_path)
+            library_root = library_tree.getroot()
+        except ET.ParseError:
+            raise ValueError.add_note("No books logged")
+        book_element = library_root.find(barcode)
+        if book_element is None:
+            raise ValueError.add_note("Invalid barcode.")
+        loans_path = f"{homedir}database/loans.xml"
+        try:
+            loans_tree = ET.parse(loans_path)
+            loans_root = loans_tree.getroot()
+        except ET.ParseError:
+            loans_root = ET.Element("database")
+            loans_tree = ET.ElementTree(loans_root)
+        settings_path = f"{homedir}settings.xml"
+        settings_tree = ET.parse(settings_path)
+        settings_root = settings_tree.getroot()
+        loan_element = ET.SubElement(loans_root, barcode)
+        ET.SubElement(loan_element, "patron").text = patron
+        ET.SubElement(loan_element, "date").text = datetime.datetime.now().isoformat()
+        ET.SubElement(loan_element, "due_date").text = (datetime.datetime.now() + datetime.timedelta(days=int(settings_root.find("loan_period").text))).isoformat()
+        ET.SubElement(loan_element, "renewals").text = "0"
+        loans_tree.write(loans_path)
+
+    def return_book(barcode:str):
+        if not os.path.exists(f"{homedir}settings.xml"):
+            raise FileNotFoundError.add_note("Please initialize the library first.")
+        loans_path = f"{homedir}database/loans.xml"
+        try:
+            loans_tree = ET.parse(loans_path)
+            loans_root = loans_tree.getroot()
+        except ET.ParseError:
+            raise ValueError.add_note("No loans logged")
+        loan_element = loans_root.find(barcode)
+        if loan_element is None:
+            raise ValueError.add_note("Invalid barcode.")
+        loans_root.remove(loan_element)
+        loans_tree.write(loans_path)
+    
+    def add_patron(card_num:str,name:str, email:str, phone:str, notes:str):
+        if not os.path.exists(f"{homedir}settings.xml"):
+            raise FileNotFoundError.add_note("Please initialize the library first.")
+        patrons_path = f"{homedir}database/patrons.xml"
+        try:
+            patrons_tree = ET.parse(patrons_path)
+            patrons_root = patrons_tree.getroot()
+        except ET.ParseError:
+            patrons_root = ET.Element("database")
+            patrons_tree = ET.ElementTree(patrons_root)
+        patron_element = ET.SubElement(patrons_root, card_num)
+        ET.SubElement(patron_element, "name").text = name
+        ET.SubElement(patron_element, "email").text = email
+        ET.SubElement(patron_element, "phone").text = phone
+        ET.SubElement(patron_element, "notes").text = notes
+        patrons_tree.write(patrons_path)
+
+    def rem_patron(card_num:str):
+        if not os.path.exists(f"{homedir}settings.xml"):
+            raise FileNotFoundError.add_note("Please initialize the library first.")
+        patrons_path = f"{homedir}database/patrons.xml"
+        try:
+            patrons_tree = ET.parse(patrons_path)
+            patrons_root = patrons_tree.getroot()
+        except ET.ParseError:
+            raise ValueError.add_note("No patrons logged")
+        patron_element = patrons_root.find(card_num)
+        if patron_element is None:
+            raise ValueError.add_note("Invalid card number.")
+        patrons_root.remove(patron_element)
+        patrons_tree.write(patrons_path)
+
+    def list_loans(card_num:str):
+        if not os.path.exists(f"{homedir}settings.xml"):
+            raise FileNotFoundError.add_note("Please initialize the library first.")
+        loans_path = f"{homedir}database/loans.xml"
+        try:
+            loans_tree = ET.parse(loans_path)
+            loans_root = loans_tree.getroot()
+        except ET.ParseError:
+            raise ValueError.add_note("No loans logged")
+        patron_loans = []
+        for loan in loans_root:
+            if loan.find("patron").text == card_num:
+                patron_loans.append(loan.tag)
+        return patron_loans
+    
+    def renew_loan(barcode:str):
+        if not os.path.exists(f"{homedir}settings.xml"):
+            raise FileNotFoundError.add_note("Please initialize the library first.")
+        loans_path = f"{homedir}database/loans.xml"
+        try:
+            loans_tree = ET.parse(loans_path)
+            loans_root = loans_tree.getroot()
+        except ET.ParseError:
+            raise ValueError.add_note("No loans logged")
+        loan_element = loans_root.find(barcode)
+        if loan_element is None:
+            raise ValueError.add_note("Invalid barcode.")
+        settings_path = f"{homedir}settings.xml"
+        settings_tree = ET.parse(settings_path)
+        settings_root = settings_tree.getroot()
+        due_date = datetime.datetime.fromisoformat(loan_element.find("due_date").text)
+        new_due_date = due_date + datetime.timedelta(days=int(settings_root.find("loan_period").text))
+        loan_element.find("due_date").text = new_due_date.isoformat()
+        loan_element.find("renewals").text = str(int(loan_element.find("renewals").text) + 1)
+        loans_tree.write(loans_path)
+
+if __name__ == "__main__":
+    print("This is not a frontend, it will not do anything when run on its own.\n" \
+    "Please download the frontend from github, or get a 3rd-party one to interface\n" \
+    "with this app. Alternatively, if you know about the internals of this app,\n" \
+    "you can run 'python3' in a terminal, then import this file and interface with\n" \
+    "it directly.")
+    input("\nPress enter to exit.")
