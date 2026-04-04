@@ -202,9 +202,11 @@ class JLMP:
         loan_element.find("renewals").text = str(int(loan_element.find("renewals").text) + 1)
         loans_tree.write(loans_path)
 
-    def title_search(query:str):
+    def search(type:str,query:str):
         if not os.path.exists(f"{homedir}settings.xml"):
             raise FileNotFoundError
+        if type not in ["title", "author", "genre", "year", "isbn"]:
+            raise ValueError
         library_path = f"{homedir}database/library.xml"
         try:
             library_tree = ET.parse(library_path)
@@ -214,7 +216,7 @@ class JLMP:
             library_tree = ET.ElementTree(library_root)
         results = []
         for book in library_root:
-            if query.lower() in book.find("title").text.lower():
+            if query.lower() in book.find(f"{type}").text.lower():
                 results.append(JLMP.get_book_info(book))
         return results
 
