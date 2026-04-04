@@ -15,7 +15,7 @@ class JLMP:
         try:
             os.makedirs(homedir, exist_ok=False)
         except OSError:
-            raise FileExistsError.add_note("Already initialized.")
+            raise FileExistsError
         if barcode_length.isdigit():
             barcode_length = int(barcode_length)
             if 3 <= barcode_length:
@@ -49,7 +49,7 @@ class JLMP:
 
     def add_book(title:str, author:str, year:str, isbn:str):
         if not os.path.exists(f"{homedir}settings.xml"):
-            raise FileNotFoundError.add_note("Please initialize the library first.")
+            raise FileNotFoundError
         settings_tree = ET.parse(f"{homedir}settings.xml")
         settings_root = settings_tree.getroot()
         barcode_length = int(settings_root.find("barcode_length").text)
@@ -79,31 +79,31 @@ class JLMP:
 
     def rem_book(barcode:str):
         if not os.path.exists(f"{homedir}settings.xml"):
-            raise FileNotFoundError.add_note("Please initialize the library first.")
+            raise FileNotFoundError
         library_path = f"{homedir}database/library.xml"
         try:
             library_tree = ET.parse(library_path)
             library_root = library_tree.getroot()
         except ET.ParseError:
-            raise ValueError.add_note("No books logged")
+            raise ValueError
         book_element = library_root.find(barcode)
         if book_element is None:
-            raise ValueError.add_note("Invalid barcode.")
+            raise ValueError
         library_root.remove(book_element)
         library_tree.write(library_path)
 
     def loan_book(barcode:str, patron:str):
         if not os.path.exists(f"{homedir}settings.xml"):
-            raise FileNotFoundError.add_note("Please initialize the library first.")
+            raise FileNotFoundError
         library_path = f"{homedir}database/library.xml"
         try:
             library_tree = ET.parse(library_path)
             library_root = library_tree.getroot()
         except ET.ParseError:
-            raise ValueError.add_note("No books logged")
+            raise ValueError
         book_element = library_root.find(barcode)
         if book_element is None:
-            raise ValueError.add_note("Invalid barcode.")
+            raise ValueError
         loans_path = f"{homedir}database/loans.xml"
         try:
             loans_tree = ET.parse(loans_path)
@@ -123,22 +123,22 @@ class JLMP:
 
     def return_book(barcode:str):
         if not os.path.exists(f"{homedir}settings.xml"):
-            raise FileNotFoundError.add_note("Please initialize the library first.")
+            raise FileNotFoundError
         loans_path = f"{homedir}database/loans.xml"
         try:
             loans_tree = ET.parse(loans_path)
             loans_root = loans_tree.getroot()
         except ET.ParseError:
-            raise ValueError.add_note("No loans logged")
+            raise ValueError
         loan_element = loans_root.find(barcode)
         if loan_element is None:
-            raise ValueError.add_note("Invalid barcode.")
+            raise ValueError
         loans_root.remove(loan_element)
         loans_tree.write(loans_path)
     
     def add_patron(card_num:str,name:str, email:str, phone:str, notes:str):
         if not os.path.exists(f"{homedir}settings.xml"):
-            raise FileNotFoundError.add_note("Please initialize the library first.")
+            raise FileNotFoundError
         patrons_path = f"{homedir}database/patrons.xml"
         try:
             patrons_tree = ET.parse(patrons_path)
@@ -155,28 +155,28 @@ class JLMP:
 
     def rem_patron(card_num:str):
         if not os.path.exists(f"{homedir}settings.xml"):
-            raise FileNotFoundError.add_note("Please initialize the library first.")
+            raise FileNotFoundError
         patrons_path = f"{homedir}database/patrons.xml"
         try:
             patrons_tree = ET.parse(patrons_path)
             patrons_root = patrons_tree.getroot()
         except ET.ParseError:
-            raise ValueError.add_note("No patrons logged")
+            raise ValueError
         patron_element = patrons_root.find(card_num)
         if patron_element is None:
-            raise ValueError.add_note("Invalid card number.")
+            raise ValueError
         patrons_root.remove(patron_element)
         patrons_tree.write(patrons_path)
 
     def list_loans(card_num:str):
         if not os.path.exists(f"{homedir}settings.xml"):
-            raise FileNotFoundError.add_note("Please initialize the library first.")
+            raise FileNotFoundError
         loans_path = f"{homedir}database/loans.xml"
         try:
             loans_tree = ET.parse(loans_path)
             loans_root = loans_tree.getroot()
         except ET.ParseError:
-            raise ValueError.add_note("No loans logged")
+            raise ValueError
         patron_loans = []
         for loan in loans_root:
             if loan.find("patron").text == card_num:
@@ -185,16 +185,16 @@ class JLMP:
     
     def renew_loan(barcode:str):
         if not os.path.exists(f"{homedir}settings.xml"):
-            raise FileNotFoundError.add_note("Please initialize the library first.")
+            raise FileNotFoundError
         loans_path = f"{homedir}database/loans.xml"
         try:
             loans_tree = ET.parse(loans_path)
             loans_root = loans_tree.getroot()
         except ET.ParseError:
-            raise ValueError.add_note("No loans logged")
+            raise ValueError
         loan_element = loans_root.find(barcode)
         if loan_element is None:
-            raise ValueError.add_note("Invalid barcode.")
+            raise ValueError
         settings_path = f"{homedir}settings.xml"
         settings_tree = ET.parse(settings_path)
         settings_root = settings_tree.getroot()
@@ -206,13 +206,13 @@ class JLMP:
 
     def title_search(query:str):
         if not os.path.exists(f"{homedir}settings.xml"):
-            raise FileNotFoundError.add_note("Please initialize the library first.")
+            raise FileNotFoundError
         library_path = f"{homedir}database/library.xml"
         try:
             library_tree = ET.parse(library_path)
             library_root = library_tree.getroot()
         except ET.ParseError:
-            raise ValueError.add_note("No books logged")
+            raise ValueError
         results = ""
         for book in library_root:
             if query.lower() in book.find("title").text.lower():
