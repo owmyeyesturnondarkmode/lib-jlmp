@@ -4,11 +4,7 @@ import os
 import xml.etree.ElementTree as ET
 import datetime
 
-homedir = os.path.expanduser("~/.local/share/wls/")
-debug = False
-debug = True           # Uncomment this line to enable debug mode, which uses a local directory instead of the user's home directory.
-if debug:
-    homedir = "./debug/"
+homedir = "./JLMP/"
 
 class JLMP:
     def init(barcode_length:str,loan_period:str):
@@ -47,7 +43,7 @@ class JLMP:
         with open(f"{homedir}database/patrons.xml", "w") as f:
             f.write("<database></database>")
 
-    def add_book(title:str, author:str, year:str, isbn:str):
+    def add_book(title:str, fiction:bool,genre:str,author:str, year:str, isbn:str):
         if not os.path.exists(f"{homedir}settings.xml"):
             raise FileNotFoundError
         settings_tree = ET.parse(f"{homedir}settings.xml")
@@ -75,6 +71,8 @@ class JLMP:
         ET.SubElement(book_element, "author").text = author
         ET.SubElement(book_element, "year").text = year
         ET.SubElement(book_element, "isbn").text = isbn
+        ET.SubElement(book_element, "genre").text = genre
+        ET.SubElement(book_element, "fiction").text = str(fiction)
         library_tree.write(library_path)
 
     def rem_book(barcode:str):
@@ -217,8 +215,23 @@ class JLMP:
         results = []
         for book in library_root:
             if query.lower() in book.find("title").text.lower():
-                results.append(f"{book.get('barcode')}: {book.find('title').text} by {book.find('author').text} ({book.find('year').text})")
+                results.append(JLMP.get_book_info(book))
         return results
+
+    def get_book_info(barcode:str):
+        if not os.path.exists(f"{homedir}settings.xml"):
+            raise FileNotFoundError
+        library_path = f"{homedir}database/library.xml"
+        try:
+            library_tree = ET.parse(library_path)
+            library_root = library_tree.getroot()
+        except ET.ParseError:
+            library_root = ET.Element("database")
+            library_tree = ET.ElementTree(library_root)
+        book_element = library_root.find(f"book[@barcode='{barcode}']")
+        if book_element is None:
+            raise ValueError
+        return f"{barcode.get('barcode')}: {barcode.find('title').text} | {barcode.find('genre').text} | {barcode.find('author').text} | {barcode.find('year').text}) | Fiction: {barcode.find('fiction').text}"
 
 if __name__ == "__main__":
     print("This is not a frontend, it will not do anything when run on its own.\n" \

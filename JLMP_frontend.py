@@ -1,2 +1,1 @@
-import JLMP as WLS
-
+import JLMP
