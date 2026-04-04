@@ -70,7 +70,7 @@ class JLMP:
         except ET.ParseError:
             library_root = ET.Element("database")
             library_tree = ET.ElementTree(library_root)
-        book_element = ET.SubElement(library_root, barcode)
+        book_element = ET.SubElement(library_root, "book", {"barcode": barcode})
         ET.SubElement(book_element, "title").text = title
         ET.SubElement(book_element, "author").text = author
         ET.SubElement(book_element, "year").text = year
@@ -86,7 +86,7 @@ class JLMP:
             library_root = library_tree.getroot()
         except ET.ParseError:
             raise ValueError
-        book_element = library_root.find(barcode)
+        book_element = library_root.find(f"book[@barcode='{barcode}']")
         if book_element is None:
             raise ValueError
         library_root.remove(book_element)
@@ -101,7 +101,7 @@ class JLMP:
             library_root = library_tree.getroot()
         except ET.ParseError:
             raise ValueError
-        book_element = library_root.find(barcode)
+        book_element = library_root.find(f"book[@barcode='{barcode}']")
         if book_element is None:
             raise ValueError
         loans_path = f"{homedir}database/loans.xml"
@@ -114,7 +114,7 @@ class JLMP:
         settings_path = f"{homedir}settings.xml"
         settings_tree = ET.parse(settings_path)
         settings_root = settings_tree.getroot()
-        loan_element = ET.SubElement(loans_root, barcode)
+        loan_element = ET.SubElement(loans_root, "loan", {"barcode": barcode})
         ET.SubElement(loan_element, "patron").text = patron
         ET.SubElement(loan_element, "date").text = datetime.datetime.now().isoformat()
         ET.SubElement(loan_element, "due_date").text = (datetime.datetime.now() + datetime.timedelta(days=int(settings_root.find("loan_period").text))).isoformat()
@@ -130,7 +130,7 @@ class JLMP:
             loans_root = loans_tree.getroot()
         except ET.ParseError:
             raise ValueError
-        loan_element = loans_root.find(barcode)
+        loan_element = loans_root.find(f"loan[@barcode='{barcode}']")
         if loan_element is None:
             raise ValueError
         loans_root.remove(loan_element)
@@ -146,7 +146,7 @@ class JLMP:
         except ET.ParseError:
             patrons_root = ET.Element("database")
             patrons_tree = ET.ElementTree(patrons_root)
-        patron_element = ET.SubElement(patrons_root, card_num)
+        patron_element = ET.SubElement(patrons_root, "patron", {"card_num": card_num})
         ET.SubElement(patron_element, "name").text = name
         ET.SubElement(patron_element, "email").text = email
         ET.SubElement(patron_element, "phone").text = phone
@@ -162,7 +162,7 @@ class JLMP:
             patrons_root = patrons_tree.getroot()
         except ET.ParseError:
             raise ValueError
-        patron_element = patrons_root.find(card_num)
+        patron_element = patrons_root.find(f"patron[@card_num='{card_num}']")
         if patron_element is None:
             raise ValueError
         patrons_root.remove(patron_element)
@@ -180,7 +180,7 @@ class JLMP:
         patron_loans = []
         for loan in loans_root:
             if loan.find("patron").text == card_num:
-                patron_loans.append(loan.tag)
+                patron_loans.append(loan.get("barcode"))
         return patron_loans
     
     def renew_loan(barcode:str):
@@ -192,7 +192,7 @@ class JLMP:
             loans_root = loans_tree.getroot()
         except ET.ParseError:
             raise ValueError
-        loan_element = loans_root.find(barcode)
+        loan_element = loans_root.find(f"loan[@barcode='{barcode}']")
         if loan_element is None:
             raise ValueError
         settings_path = f"{homedir}settings.xml"
@@ -217,7 +217,7 @@ class JLMP:
         results = ""
         for book in library_root:
             if query.lower() in book.find("title").text.lower():
-                results += f"{book.tag}: {book.find('title').text} by {book.find('author').text} ({book.find('year').text})\n"
+                results += f"{book.get('barcode')}: {book.find('title').text} by {book.find('author').text} ({book.find('year').text})\n"
         return results
 
 if __name__ == "__main__":
