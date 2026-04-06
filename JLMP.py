@@ -72,9 +72,9 @@ class library:
             library_root = ET.Element("database")
             library_tree = ET.ElementTree(library_root)
         results = []
-        for book in library_root:
-            if query.lower() in book.find(f"{type}").text.lower():
-                results.append(book.get_info(book.get('barcode')))
+        for b in library_root:
+            if query.lower() in b.find(f"{type}").text.lower():
+                results.append(book.get_info(b.get('barcode')))
         return results
 
 class book:
