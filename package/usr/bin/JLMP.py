@@ -6,7 +6,8 @@ import datetime
 
 homedir = "./JLMP/"
 
-class JLMP:
+class library:
+
     def init(barcode_length:str,loan_period:str):
         try:
             os.makedirs(homedir, exist_ok=False)
@@ -22,7 +23,6 @@ class JLMP:
                 raise ValueError
         else:
             raise ValueError
-
         if loan_period.isdigit():
             loan_period = int(loan_period)
             if loan_period > 1:
@@ -43,7 +43,27 @@ class JLMP:
         with open(f"{homedir}database/patrons.xml", "w") as f:
             f.write("<database></database>")
 
-    def add_book(title:str, fiction:bool,genre:str,author:str, year:str, isbn:str):
+    def search(type:str,query:str):
+        if not os.path.exists(f"{homedir}settings.xml"):
+            raise FileNotFoundError
+        if type not in ["title", "author", "genre", "year", "isbn"]:
+            raise ValueError
+        library_path = f"{homedir}database/library.xml"
+        try:
+            library_tree = ET.parse(library_path)
+            library_root = library_tree.getroot()
+        except ET.ParseError:
+            library_root = ET.Element("database")
+            library_tree = ET.ElementTree(library_root)
+        results = []
+        for book in library_root:
+            if query.lower() in book.find(f"{type}").text.lower():
+                results.append(book.get_info(book.get('barcode')))
+        return results
+
+class book:
+
+    def add(title:str, fiction:bool,genre:str,author:str, year:str, isbn:str):
         if not os.path.exists(f"{homedir}settings.xml"):
             raise FileNotFoundError
         settings_tree = ET.parse(f"{homedir}settings.xml")
@@ -75,7 +95,7 @@ class JLMP:
         ET.SubElement(book_element, "fiction").text = str(fiction)
         library_tree.write(library_path)
 
-    def rem_book(barcode:str):
+    def remove(barcode:str):
         if not os.path.exists(f"{homedir}settings.xml"):
             raise FileNotFoundError
         library_path = f"{homedir}database/library.xml"
@@ -90,7 +110,7 @@ class JLMP:
         library_root.remove(book_element)
         library_tree.write(library_path)
 
-    def loan_book(barcode:str, patron:str):
+    def loan(barcode:str, patron:str):
         if not os.path.exists(f"{homedir}settings.xml"):
             raise FileNotFoundError
         library_path = f"{homedir}database/library.xml"
@@ -119,7 +139,7 @@ class JLMP:
         ET.SubElement(loan_element, "renewals").text = "0"
         loans_tree.write(loans_path)
 
-    def return_book(barcode:str):
+    def return_loan(barcode:str):
         if not os.path.exists(f"{homedir}settings.xml"):
             raise FileNotFoundError
         loans_path = f"{homedir}database/loans.xml"
@@ -134,7 +154,45 @@ class JLMP:
         loans_root.remove(loan_element)
         loans_tree.write(loans_path)
     
-    def add_patron(card_num:str,name:str, email:str, phone:str, notes:str):
+    def renew_loan(barcode:str):
+            if not os.path.exists(f"{homedir}settings.xml"):
+                raise FileNotFoundError
+            loans_path = f"{homedir}database/loans.xml"
+            try:
+                loans_tree = ET.parse(loans_path)
+                loans_root = loans_tree.getroot()
+            except ET.ParseError:
+                raise ValueError
+            loan_element = loans_root.find(f"loan[@barcode='{barcode}']")
+            if loan_element is None:
+                raise ValueError
+            settings_path = f"{homedir}settings.xml"
+            settings_tree = ET.parse(settings_path)
+            settings_root = settings_tree.getroot()
+            due_date = datetime.datetime.fromisoformat(loan_element.find("due_date").text)
+            new_due_date = due_date + datetime.timedelta(days=int(settings_root.find("loan_period").text))
+            loan_element.find("due_date").text = new_due_date.isoformat()
+            loan_element.find("renewals").text = str(int(loan_element.find("renewals").text) + 1)
+            loans_tree.write(loans_path)
+
+    def get_info(barcode:str):
+        if not os.path.exists(f"{homedir}settings.xml"):
+            raise FileNotFoundError
+        library_path = f"{homedir}database/library.xml"
+        try:
+            library_tree = ET.parse(library_path)
+            library_root = library_tree.getroot()
+        except ET.ParseError:
+            library_root = ET.Element("database")
+            library_tree = ET.ElementTree(library_root)
+        book_element = library_root.find(f"book[@barcode='{barcode}']")
+        if book_element is None:
+            raise ValueError
+        return f"{barcode}: {book_element.find('title').text} | {book_element.find('genre').text} | {book_element.find('author').text} | {book_element.find('year').text} | Fiction: {book_element.find('fiction').text}"
+
+class patron:
+
+    def add(card_num:str,name:str, email:str, phone:str, notes:str):
         if not os.path.exists(f"{homedir}settings.xml"):
             raise FileNotFoundError
         patrons_path = f"{homedir}database/patrons.xml"
@@ -151,7 +209,7 @@ class JLMP:
         ET.SubElement(patron_element, "notes").text = notes
         patrons_tree.write(patrons_path)
 
-    def rem_patron(card_num:str):
+    def remove(card_num:str):
         if not os.path.exists(f"{homedir}settings.xml"):
             raise FileNotFoundError
         patrons_path = f"{homedir}database/patrons.xml"
@@ -180,60 +238,6 @@ class JLMP:
             if loan.find("patron").text == card_num:
                 patron_loans.append(loan.get("barcode"))
         return patron_loans
-    
-    def renew_loan(barcode:str):
-        if not os.path.exists(f"{homedir}settings.xml"):
-            raise FileNotFoundError
-        loans_path = f"{homedir}database/loans.xml"
-        try:
-            loans_tree = ET.parse(loans_path)
-            loans_root = loans_tree.getroot()
-        except ET.ParseError:
-            raise ValueError
-        loan_element = loans_root.find(f"loan[@barcode='{barcode}']")
-        if loan_element is None:
-            raise ValueError
-        settings_path = f"{homedir}settings.xml"
-        settings_tree = ET.parse(settings_path)
-        settings_root = settings_tree.getroot()
-        due_date = datetime.datetime.fromisoformat(loan_element.find("due_date").text)
-        new_due_date = due_date + datetime.timedelta(days=int(settings_root.find("loan_period").text))
-        loan_element.find("due_date").text = new_due_date.isoformat()
-        loan_element.find("renewals").text = str(int(loan_element.find("renewals").text) + 1)
-        loans_tree.write(loans_path)
-
-    def search(type:str,query:str):
-        if not os.path.exists(f"{homedir}settings.xml"):
-            raise FileNotFoundError
-        if type not in ["title", "author", "genre", "year", "isbn"]:
-            raise ValueError
-        library_path = f"{homedir}database/library.xml"
-        try:
-            library_tree = ET.parse(library_path)
-            library_root = library_tree.getroot()
-        except ET.ParseError:
-            library_root = ET.Element("database")
-            library_tree = ET.ElementTree(library_root)
-        results = []
-        for book in library_root:
-            if query.lower() in book.find(f"{type}").text.lower():
-                results.append(JLMP.get_book_info(book))
-        return results
-
-    def get_book_info(barcode:str):
-        if not os.path.exists(f"{homedir}settings.xml"):
-            raise FileNotFoundError
-        library_path = f"{homedir}database/library.xml"
-        try:
-            library_tree = ET.parse(library_path)
-            library_root = library_tree.getroot()
-        except ET.ParseError:
-            library_root = ET.Element("database")
-            library_tree = ET.ElementTree(library_root)
-        book_element = library_root.find(f"book[@barcode='{barcode}']")
-        if book_element is None:
-            raise ValueError
-        return f"{barcode}: {book_element.find('title').text} | {book_element.find('genre').text} | {book_element.find('author').text} | {book_element.find('year').text} | Fiction: {book_element.find('fiction').text}"
 
 if __name__ == "__main__":
     print("This is not a frontend, it will not do anything when run on its own.\n" \

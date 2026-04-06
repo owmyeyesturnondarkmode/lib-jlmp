@@ -1,5 +1,5 @@
 Package: jlmp
-Version: 1.0.0
+Version: 2.0.0
 Depends: python3
 Architecture: all
 Maintainer: owmyeyesturnondarkmode <https://github.com/owmyeyesturnondarkmode>
