@@ -69,14 +69,14 @@ Like this:
 ### Syntax
 | Function | Syntax |
 | -------- | ------ |
-| Initialize | `JLMP.JLMP.init(barcode_length:str,loan_period:str)` |
-| Add book | `JLMP.JLMP.add_book(title:str, fiction:bool,genre:str,author:str, year:str, isbn:str)` |
-| Remove book | `JLMP.JLMP.rem_book(barcode:str)` |
-| Loan book | `JLMP.JLMP.loan_book(barcode:str, patron:str)` |
-| Return book | `JLMP.JLMP.return_book(barcode:str)` |
-| Add patron | `JLMP.JLMP.add_patron(card_num:str,name:str, email:str, phone:str, notes:str)` |
-| Remove patron | `JLMP.JLMP.rem_patron(card_num:str)` |
-| List patron's loans | `JLMP.JLMP.list_loans(card_num:str)` |
-| Renew Loan | `JLMP.JLMP.renew_loan(barcode:str)` |
-| Search catalog | `JLMP.JLMP.search(type:str,query:str)` (type: title, author, year, genre, isbn) |
-| Get book info | `JLMP.JLMP.get_book_info(barcode:str)` |
+| Initialize | `JLMP.library.init(barcode_length:str,loan_period:str)` |
+| Add book | `JLMP.book.add(title:str, fiction:bool,genre:str,author:str, year:str, isbn:str)` |
+| Remove book | `JLMP.book.remove(barcode:str)` |
+| Loan book | `JLMP.book.loan(barcode:str, patron:str)` |
+| Return book | `JLMP.book.return_loan(barcode:str)` |
+| Add patron | `JLMP.patron.add(card_num:str,name:str, email:str, phone:str, notes:str)` |
+| Remove patron | `JLMP.patron.remove(card_num:str)` |
+| List patron's loans | `JLMP.patron.list_loans(card_num:str)` |
+| Renew Loan | `JLMP.book.renew_loan(barcode:str)` |
+| Search catalog | `JLMP.library.search(type:str,query:str)` (type: title, author, year, genre, isbn) |
+| Get book info | `JLMP.book.get_info(barcode:str)` |
