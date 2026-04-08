@@ -204,7 +204,7 @@ class book:
         book_element = library_root.find(f"book[@barcode='{barcode}']")
         if book_element is None:
             raise ValueError
-        return f"{barcode}: {book_element.find('title').text} | {book_element.find('genre').text} | {book_element.find('author').text} | {book_element.find('year').text} | Fiction: {book_element.find('fiction').text}"
+        return [{book_element.find('title').text}, {book_element.find('genre').text}, {book_element.find('author').text}, {book_element.find('year').text}, {book_element.find('fiction').text}]
 
 class patron:
 
@@ -255,6 +255,20 @@ class patron:
                 patron_loans.append(loan.get("barcode"))
         return patron_loans
 
+    def get_info(card_num:str):
+        if not os.path.exists(f"{homedir}settings.xml"):
+            raise FileNotFoundError
+        patrons_path = f"{homedir}database/patrons.xml"
+        try:
+            patrons_tree = ET.parse(patrons_path)
+            patrons_root = patrons_tree.getroot()
+        except ET.ParseError:
+            raise ValueError
+        patron_element = patrons_root.find(f"patron[@card_num='{card_num}']")
+        if patron_element is None:
+            raise ValueError
+        return [{patron_element.find('name').text},{patron_element.find('email').text},{patron_element.find('phone').text},{patron_element.find('notes').text}]
+    
 if __name__ == "__main__":
     print("This is not a frontend, it will not do anything when run on its own.\n" \
     "Please download the frontend from github, or get a 3rd-party one to interface\n" \
