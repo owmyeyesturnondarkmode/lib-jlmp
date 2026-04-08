@@ -81,4 +81,4 @@ Like this:
 | Renew Loan | `JLMP.book.renew_loan(barcode:str)` |
 | Search catalog | `JLMP.library.search(type:str,query:str)` (type: title, author, year, genre, isbn) |
 | Get book info | `JLMP.book.get_info(barcode:str)` |
-| Get patron info | `JLMP.patron.get_info(card_num:str` |
+| Get patron info | `JLMP.patron.get_info(card_num:str)` |
