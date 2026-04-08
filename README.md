@@ -1,4 +1,5 @@
 # JLMP
+!!!JLMP will NOT function on its own. Get the frontend here: <https://github.com/owmyeyesturnondarkmode/jlmp-frontend>!!!
 **J**'s **L**ibrary **M**anagment **P**rogram
 ## What?
 JLMP is a backend for library managment software, being able to:
@@ -13,8 +14,6 @@ JLMP is a backend for library managment software, being able to:
 - Renew a loan
 - Search the library catalog
 - Get a book's info (such as title, date published, genre, and others)
-  
-It needs a frontend to function, as it is just a dependency. One is avalable by me here: <https://github.com/owmyeyesturnondarkmode/jlmp-frontend>
 
 More features will be added, and the ones that I'm planning to add are listed below.
 - More data for books
