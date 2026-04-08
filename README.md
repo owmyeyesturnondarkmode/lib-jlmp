@@ -15,6 +15,7 @@ JLMP is a backend for library managment software, being able to:
 - Renew a loan
 - Search the library catalog
 - Get a book's info (such as title, date published, genre, and others)
+- Get a patron's info
 
 More features will be added, and the ones that I'm planning to add are listed below.
 - More data for books
@@ -22,7 +23,7 @@ More features will be added, and the ones that I'm planning to add are listed be
 - List a patron's overdue books
 - List all overdue books
 - Database snapshotting
-- More will be added, and removed from this list as time goes on
+- More will be added and removed from this list as time goes on
 ## Why?
 One day, I was thinking: *Is there really a lot of library managment softwares out there?* And I decided that there probably weren't
 too many. And then the big thing hit me: *But are they open-source?* And, me being me, without doing any research as to if they are
@@ -80,3 +81,4 @@ Like this:
 | Renew Loan | `JLMP.book.renew_loan(barcode:str)` |
 | Search catalog | `JLMP.library.search(type:str,query:str)` (type: title, author, year, genre, isbn) |
 | Get book info | `JLMP.book.get_info(barcode:str)` |
+| Get patron info | `JLMP.patron.get_info(card_num:str` |
