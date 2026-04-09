@@ -204,7 +204,7 @@ class book:
         book_element = library_root.find(f"book[@barcode='{barcode}']")
         if book_element is None:
             raise ValueError
-        return [{book_element.find('title').text}, {book_element.find('genre').text}, {book_element.find('author').text}, {book_element.find('year').text}, {book_element.find('fiction').text}]
+        return [book_element.get("barcode"), book_element.find('title').text, book_element.find('genre').text, book_element.find('author').text, book_element.find('year').text, book_element.find('fiction').text]
 
 class patron:
 
@@ -267,8 +267,8 @@ class patron:
         patron_element = patrons_root.find(f"patron[@card_num='{card_num}']")
         if patron_element is None:
             raise ValueError
-        return [{patron_element.find('name').text},{patron_element.find('email').text},{patron_element.find('phone').text},{patron_element.find('notes').text}]
-    
+        return [patron_element.find('name').text, patron_element.find('email').text, patron_element.find('phone').text, patron_element.find('notes').text]
+
 if __name__ == "__main__":
     print("This is not a frontend, it will not do anything when run on its own.\n" \
     "Please download the frontend from github, or get a 3rd-party one to interface\n" \
