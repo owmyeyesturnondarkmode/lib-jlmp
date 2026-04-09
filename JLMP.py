@@ -252,7 +252,8 @@ class patron:
         patron_loans = []
         for loan in loans_root:
             if loan.find("patron").text == card_num:
-                patron_loans.append(loan.get("barcode"))
+                loan = [loan.get("barcode"),loan.find("due_date"),loan.find("renewals").text]
+                patron_loans.append(loan)
         return patron_loans
 
     def get_info(card_num:str):
