@@ -181,7 +181,7 @@ class book:
                 raise ValueError
             loan_element = loans_root.find(f"loan[@barcode='{barcode}']")
             if loan_element is None:
-                raise ValueError
+                raise ValueError("No loan to renew")
             settings_path = f"{homedir}settings.xml"
             settings_tree = ET.parse(settings_path)
             settings_root = settings_tree.getroot()
@@ -252,7 +252,8 @@ class patron:
         patron_loans = []
         for loan in loans_root:
             if loan.find("patron").text == card_num:
-                patron_loans.append(loan.get("barcode"))
+                loan = [loan.get("barcode"),loan.find("due_date").text,loan.find("renewals").text]
+                patron_loans.append(loan)
         return patron_loans
 
     def get_info(card_num:str):
